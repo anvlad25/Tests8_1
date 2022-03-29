@@ -107,8 +107,31 @@ class SearchViewModelTest {
         }
     }
 
+    @Test
+    fun liveData_TestNull() {
+        val observer = Observer<ScreenState> {}
+        val liveData = searchViewModel.subscribeToLiveData()
+        val error = Throwable(ERROR_NULL)
+
+        Mockito.`when`(repository.searchGithub(SEARCH_QUERY)).thenReturn(
+            Observable.just(
+                SearchResponse(null, null)
+            )
+        )
+
+        try {
+            liveData.observeForever(observer)
+            searchViewModel.searchGitHub(SEARCH_QUERY)
+            val value: ScreenState.Error = liveData.value as ScreenState.Error
+            Assert.assertEquals(value.error.message, error.message)
+        } finally {
+            liveData.removeObserver(observer)
+        }
+    }
+
     companion object {
         private const val SEARCH_QUERY = "some query"
         private const val ERROR_TEXT = "error"
+        private const val ERROR_NULL = "Search results or total count are null"
     }
 }
